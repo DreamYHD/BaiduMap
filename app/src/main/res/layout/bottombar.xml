@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+
+              android:layout_width="match_parent"
+              android:layout_height="60dp">
+    <Button
+        android:id="@+id/bot_map"
+        android:text="地图"
+
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/bot_xieyi"
+        android:layout_toStartOf="@+id/bot_xieyi"
+        android:layout_marginRight="28dp"
+        android:layout_marginEnd="28dp"/>
+    <Button
+
+        android:text="协议"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/bot_xieyi"/>
+    <Button
+        android:text="OK"
+        android:id="@+id/bot_ok"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="29dp"
+        android:layout_marginEnd="29dp"/>
+
+
+
+
+</RelativeLayout>

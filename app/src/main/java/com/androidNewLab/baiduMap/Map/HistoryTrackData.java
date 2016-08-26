@@ -1,4 +1,4 @@
-package com.androidNewLab.baiduMap;
+package com.androidNewLab.baiduMap.Map;
 
 /**
  * Created by Administrator on 2016/7/28.

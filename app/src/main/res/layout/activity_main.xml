@@ -1,23 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@drawable/zhuce"
     tools:context="com.androidNewLab.baiduMap.MainActivity">
-     <Button
-         android:id="@+id/btn"
-         android:text="zzzzzzzz"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"/>
-     <com.baidu.mapapi.map.MapView
-        android:id="@+id/map"
-       android:clickable="true"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:layout_marginLeft="15dp"
+    android:layout_marginStart="30dp"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentStart="true"
+    android:orientation="horizontal"
+    android:layout_marginTop="210dp">
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/use"/>
+    <EditText
+        android:layout_marginLeft="25dp"
+        android:id="@+id/et_name"
+        android:editable="true"
+        android:background="@null"
+        android:hint="请输入用户名   "
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
 
 
-</com.baidu.mapapi.map.MapView>
 
 </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="30dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:orientation="horizontal"
+        android:layout_marginTop="270dp"
+        android:id="@+id/linearLayout">
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/password"/>
+        <EditText
+            android:layout_marginLeft="25dp"
+            android:id="@+id/et_password"
+            android:editable="true"
+            android:inputType="textPassword"
+            android:background="@null"
+            android:hint="请输入密码（6-12字母）   "
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"/>
+
+
+
+    </LinearLayout>
+    <Button
+
+        android:id="@+id/btn_login"
+        android:text="            登陆           "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearLayout"
+        android:layout_alignLeft="@+id/btn_reg"
+        android:layout_alignStart="@+id/btn_reg"
+        android:layout_marginTop="35dp"/>
+    <Button
+        android:id="@+id/btn_reg"
+        android:text="            注册          "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_below="@+id/btn_login"
+        android:layout_centerHorizontal="true"/>
+
+
+
+
+</RelativeLayout>
