@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onSuccess() {
                         Toast.makeText(MainActivity.this,"登陆Success",Toast.LENGTH_SHORT).show();
-                        Intent intent=new Intent(MainActivity.this, ContentActivity.class);
+                        Intent intent=new Intent(MainActivity.this, JustMap.class);
                         startActivity(intent);
 
                     }
