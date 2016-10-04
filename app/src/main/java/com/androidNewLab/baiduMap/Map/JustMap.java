@@ -7,23 +7,32 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 import android.widget.ZoomControls;
 
-import com.androidNewLab.baiduMap.Map.GsonService;
 import com.androidNewLab.baiduMap.R;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.PolylineOptions;
-import com.baidu.mapapi.model.LatLngBounds;
+import com.baidu.mapapi.model.inner.GeoPoint;
+import com.baidu.mapapi.search.core.SearchResult;
+import com.baidu.mapapi.search.geocode.GeoCodeOption;
+import com.baidu.mapapi.search.geocode.GeoCodeResult;
+import com.baidu.mapapi.search.geocode.GeoCoder;
+import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 import com.baidu.trace.LBSTraceClient;
 
 import com.baidu.trace.OnEntityListener;
 import com.baidu.trace.OnStartTraceListener;
+import com.baidu.trace.OnStopTraceListener;
 import com.baidu.trace.OnTrackListener;
 
 import com.baidu.location.BDLocation;
@@ -37,17 +46,19 @@ import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.trace.Trace;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import static com.androidNewLab.baiduMap.R.id.time;
 
-public class JustMap extends AppCompatActivity {
 
+public class JustMap extends AppCompatActivity implements OnGetGeoCoderResultListener{
 
     int gatherInterval = 3;  //位置采集周期 (s)
     int packInterval = 10;  //打包周期 (s)
@@ -56,7 +67,7 @@ public class JustMap extends AppCompatActivity {
     int traceType = 2;  //轨迹服务类型
     private static OnStartTraceListener startTraceListener = null;  //开启轨迹服务监听器
 
-
+    private static MapView mapView = null;
     private static BaiduMap baiduMap = null;
     private static OnEntityListener entityListener = null;
     private RefreshThread refreshThread = null;  //刷新地图线程以获取实时点
@@ -69,25 +80,31 @@ public class JustMap extends AppCompatActivity {
 
     private Trace trace;  // 实例化轨迹服务
     private LBSTraceClient client;  // 实例化轨迹服务客户端
-    private MapView mMapView;
-    private BaiduMap mBaiduMap;
-    private LocationClient locationClient;
-    private boolean firstLocation;
-
+    public static int index=0;
+    public static LatLng stLatLng=null;
+    private GeoCoder mSearch = null;
+    private static List<LatBean>mList=new ArrayList<LatBean>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         SDKInitializer.initialize(getApplicationContext());
-        setContentView(R.layout.map);
+        long time=System.currentTimeMillis();
 
+        setContentView(R.layout.map);
+        index=0;
         init();
         initOnEntityListener();
-
         initOnStartTraceListener();
 
 
 
         client.startTrace(trace, startTraceListener);  // 开启轨迹服务
+        Date date=new Date(time);
+        SimpleDateFormat format;
+        format=new SimpleDateFormat("HH:mm:ss");
+
+        Log.e("time","time1="+format.format(date));
 
 
 
@@ -97,10 +114,19 @@ public class JustMap extends AppCompatActivity {
 
 
 
-   
+
+
+
     private void init() {
 
-   
+
+        mSearch = GeoCoder.newInstance();
+        mSearch.setOnGetGeoCodeResultListener(this);
+
+        mapView = (MapView) findViewById(R.id.map);
+        baiduMap = mapView.getMap();
+        mapView.showZoomControls(false);
+
         entityName = getImei(getApplicationContext());  //手机Imei值的获取，用来充当实体名
 
         client = new LBSTraceClient(getApplicationContext());  //实例化轨迹服务客户端
@@ -108,61 +134,6 @@ public class JustMap extends AppCompatActivity {
         trace = new Trace(getApplicationContext(), serviceId, entityName, traceType);  //实例化轨迹服务
 
         client.setInterval(gatherInterval, packInterval);  //设置位置采集和打包周期
-    
-
-
-        mMapView= (MapView) findViewById(R.id.map);
-        mBaiduMap=mMapView.getMap();
-        // 隐藏logo
-        View child = mMapView.getChildAt(1);
-        if (child != null && (child instanceof ImageView || child instanceof ZoomControls)){
-            child.setVisibility(View.INVISIBLE);
-        }
-        // 设置自定义图标
-        BitmapDescriptor myMarker = BitmapDescriptorFactory
-                .fromResource(R.drawable.icon_st);
-        MyLocationConfiguration config = new MyLocationConfiguration(
-                MyLocationConfiguration.LocationMode.FOLLOWING, true, myMarker);
-
-        //地图上比例尺
-        //mMapView.showScaleControl(false);
-        // 隐藏缩放控件
-        mMapView.showZoomControls(false);
-        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(18f);
-        mBaiduMap.setMapStatus(msu);
-        //定位初始化
-        locationClient = new LocationClient(this);
-        firstLocation =true;
-        // 设置定位的相关配置
-        LocationClientOption option = new LocationClientOption();
-        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
-        option.setOpenGps(true);
-        option.setCoorType("bd09ll"); // 设置坐标类型
-        option.setScanSpan(1000);
-        locationClient.setLocOption(option);
-        locationClient.registerLocationListener(new BDLocationListener() {
-            @Override
-            public void onReceiveLocation(BDLocation bdLocation) {
-                if(bdLocation==null||mMapView==null)
-                    return;
-                //构造定位数据
-                MyLocationData locData=new MyLocationData.Builder()
-                        .accuracy(bdLocation.getRadius())
-                        .direction(100).latitude(bdLocation.getLatitude())
-                        .longitude(bdLocation.getLongitude()).build();
-                mBaiduMap.setMyLocationData(locData);
-                // 第一次定位时，将地图位置移动到当前位置
-                if (firstLocation) {
-                    firstLocation = false;
-                    LatLng xy = new LatLng(bdLocation.getLatitude(),
-                            bdLocation.getLongitude());
-                    MapStatusUpdate status = MapStatusUpdateFactory.newLatLng(xy);
-                    mBaiduMap.animateMapStatus(status);
-                }
-
-            }
-        });
-
     }
     /**
      * 初始化设置实体状态监听器
@@ -220,12 +191,14 @@ public class JustMap extends AppCompatActivity {
 
 
 
+
+
     }
 
 
     /**
      * 轨迹刷新线程
-     * @author BLYang
+     * @author Yanghaodong
      */
     private class RefreshThread extends Thread{
 
@@ -237,6 +210,7 @@ public class JustMap extends AppCompatActivity {
                 queryRealtimeTrack();
                 try{
                     Thread.sleep(packInterval * 1000);
+                    Log.d("INDEX",index+""+stLatLng.toString());
                 }catch(InterruptedException e){
                     System.out.println("线程休眠失败");
                 }
@@ -291,6 +265,22 @@ public class JustMap extends AppCompatActivity {
             if(latLng != null){
                 Log.i("TGA","当前有轨迹点");
                 pointList.add(latLng);
+                index++;
+                if(index%30==0){
+                    mSearch.reverseGeoCode(new ReverseGeoCodeOption()
+                            .location(latLng));
+
+
+                }
+
+
+                if(index==1){
+                    stLatLng=latLng;
+                    Log.d("FFF",stLatLng.toString());
+
+
+
+                }
                 drawRealtimePoint(latLng);
             }
             else{
@@ -308,17 +298,16 @@ public class JustMap extends AppCompatActivity {
      */
     private void drawRealtimePoint(LatLng point){
         Log.i("TGA","绘制成功");
-
-        mBaiduMap.clear();
-        MapStatus mapStatus = new MapStatus.Builder().target(point).zoom(18).build();
+        baiduMap.clear();
+        MapStatus mapStatus = new MapStatus.Builder().target(point).zoom(25).build();
         msUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
         realtimeBitmap = BitmapDescriptorFactory.fromResource(R.drawable.icon_st);
         overlay = new MarkerOptions().position(point)
                 .icon(realtimeBitmap).zIndex(9).draggable(true);
 
-        if(pointList.size() >= 2  && pointList.size() <= 1000){
-            Log.i("TGA","绘制hongse成功");
-            polyline = new PolylineOptions().width(10).color(Color.RED).points(pointList);
+
+        if(pointList.size() >= 2  && pointList.size() <= 6000){
+            polyline = new PolylineOptions().width(10).color(Color.GREEN).points(pointList);
         }
 
         addMarker();
@@ -327,17 +316,23 @@ public class JustMap extends AppCompatActivity {
 
 
     private void addMarker(){
+        if(stLatLng!=null){
+            BitmapDescriptor bitmap =  BitmapDescriptorFactory.fromResource(R.drawable.icon_st);
+            OverlayOptions option = new MarkerOptions().position(stLatLng).icon(bitmap);
+            baiduMap.addOverlay(option);
+        }
+
 
         if(msUpdate != null){
-            mBaiduMap.setMapStatus(msUpdate);
+            baiduMap.setMapStatus(msUpdate);
         }
 
         if(polyline != null){
-            mBaiduMap.addOverlay(polyline);
+            baiduMap.addOverlay(polyline);
         }
 
         if(overlay != null){
-            mBaiduMap.addOverlay(overlay);
+            baiduMap.addOverlay(overlay);
         }
 
 
@@ -367,6 +362,46 @@ public class JustMap extends AppCompatActivity {
 
 
     }
+    public void onGetGeoCodeResult(GeoCodeResult result) {
+        if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
+            Toast.makeText(JustMap.this, "抱歉，未能找到结果", Toast.LENGTH_LONG)
+                    .show();
+            return;
+        }
+        baiduMap.clear();
+        //定位
+        String strInfo = String.format("纬度：%f 经度：%f",
+                result.getLocation().latitude, result.getLocation().longitude);
+        Toast.makeText(JustMap.this, strInfo, Toast.LENGTH_LONG).show();
+        //click()
+
+
+        //result保存地理编码的结果 城市-->坐标
+    }
+
+
+    public void onGetReverseGeoCodeResult(ReverseGeoCodeResult result) {
+        if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
+            Toast.makeText(JustMap.this, "抱歉，未能找到结果", Toast.LENGTH_LONG)
+                    .show();
+            return;
+        }
+        Toast.makeText(JustMap.this, result.getAddress(),
+                Toast.LENGTH_LONG).show();
+        Log.i("MYWEIZHI",result.getAddress());
+        Date curDate = new Date(System.currentTimeMillis());//获取当前时间
+        SimpleDateFormat format;
+        format=new SimpleDateFormat("HH:mm:ss");
+
+        String str = format.format(curDate);
+
+        Log.e("time","time2"+str);
+        LatBean a =new LatBean(str,result.getAddress().toString());
+        mList.add(a);
+        //result保存翻地理编码的结果 坐标-->城市
+    }
+
+
 
 
     /**
@@ -389,41 +424,46 @@ public class JustMap extends AppCompatActivity {
 
 
 
+
+
     @Override
     protected void onStart()
     {
         // 如果要显示位置图标,必须先开启图层定位
-        mBaiduMap.setMyLocationEnabled(true);
-        if (!locationClient.isStarted())
-        {
-            locationClient.start();
-        }
+        baiduMap.setMyLocationEnabled(true);
+
         super.onStart();
     }
     @Override
     protected void onStop()
     {
-        mBaiduMap.setMyLocationEnabled(false);
-        locationClient.stop();
+        baiduMap.setMyLocationEnabled(false);
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mMapView.onDestroy();
+        mapView.onDestroy();
+        if(mList!=null){
+            Log.d("CHANTU",mList.size()+"   "+index);
+        }
+        mList.clear();
+        index=0;
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mMapView.onResume();
+        mapView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mMapView.onPause();
+        mapView.onPause();
     }
 
 

@@ -12,8 +12,8 @@ import android.widget.Toast;
 import com.androidNewLab.baiduMap.Chat.Conf;
 import com.androidNewLab.baiduMap.Chat.RegActivity;
 import com.androidNewLab.baiduMap.Chat.User;
-import com.androidNewLab.baiduMap.Fragment.ContentActivity;
 import com.androidNewLab.baiduMap.Map.JustMap;
+import com.androidNewLab.baiduMap.Map.SearchActivity;
 
 import cn.bmob.v3.Bmob;
 import cn.bmob.v3.listener.SaveListener;

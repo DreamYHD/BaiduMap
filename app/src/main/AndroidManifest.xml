@@ -132,7 +132,9 @@
             android:exported="true">
         </service>
 
-        <activity android:name=".Map.LatTestActivity">
+        <activity android:name=".Map.SearchActivity">
+        </activity>
+        <activity android:name=".Map.LocationActivity">
         </activity>
     </application>
 
