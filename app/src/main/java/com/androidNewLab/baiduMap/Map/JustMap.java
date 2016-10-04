@@ -7,22 +7,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.Toast;
-import android.widget.ZoomControls;
 
 import com.androidNewLab.baiduMap.R;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.PolylineOptions;
-import com.baidu.mapapi.model.inner.GeoPoint;
 import com.baidu.mapapi.search.core.SearchResult;
-import com.baidu.mapapi.search.geocode.GeoCodeOption;
 import com.baidu.mapapi.search.geocode.GeoCodeResult;
 import com.baidu.mapapi.search.geocode.GeoCoder;
 import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
@@ -32,13 +24,6 @@ import com.baidu.trace.LBSTraceClient;
 
 import com.baidu.trace.OnEntityListener;
 import com.baidu.trace.OnStartTraceListener;
-import com.baidu.trace.OnStopTraceListener;
-import com.baidu.trace.OnTrackListener;
-
-import com.baidu.location.BDLocation;
-import com.baidu.location.BDLocationListener;
-import com.baidu.location.LocationClient;
-import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
@@ -46,7 +31,6 @@ import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.trace.Trace;
 
@@ -54,9 +38,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static com.androidNewLab.baiduMap.R.id.time;
-
 
 public class JustMap extends AppCompatActivity implements OnGetGeoCoderResultListener{
 
@@ -266,7 +247,7 @@ public class JustMap extends AppCompatActivity implements OnGetGeoCoderResultLis
                 Log.i("TGA","当前有轨迹点");
                 pointList.add(latLng);
                 index++;
-                if(index%30==0){
+                if(index%3==0){
                     mSearch.reverseGeoCode(new ReverseGeoCodeOption()
                             .location(latLng));
 
@@ -389,13 +370,13 @@ public class JustMap extends AppCompatActivity implements OnGetGeoCoderResultLis
         Toast.makeText(JustMap.this, result.getAddress(),
                 Toast.LENGTH_LONG).show();
         Log.i("MYWEIZHI",result.getAddress());
+
         Date curDate = new Date(System.currentTimeMillis());//获取当前时间
         SimpleDateFormat format;
         format=new SimpleDateFormat("HH:mm:ss");
-
         String str = format.format(curDate);
-
         Log.e("time","time2"+str);
+        //将时间位置信息保存到list中
         LatBean a =new LatBean(str,result.getAddress().toString());
         mList.add(a);
         //result保存翻地理编码的结果 坐标-->城市
@@ -447,6 +428,7 @@ public class JustMap extends AppCompatActivity implements OnGetGeoCoderResultLis
         mapView.onDestroy();
         if(mList!=null){
             Log.d("CHANTU",mList.size()+"   "+index);
+
         }
         mList.clear();
         index=0;
